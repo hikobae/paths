@@ -36,15 +36,15 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             binary_name: paths
-            asset_name: paths-linux-x86_64
+            archive_name: paths-${{ github.ref_name }}-linux-x86_64.zip
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             binary_name: paths.exe
-            asset_name: paths-windows-x86_64.exe
+            archive_name: paths-${{ github.ref_name }}-windows-x86_64.zip
           - os: macos-latest
             target: x86_64-apple-darwin
             binary_name: paths
-            asset_name: paths-macos-x86_64
+            archive_name: paths-${{ github.ref_name }}-macos-x86_64.zip
     steps:
       - uses: actions/checkout@v4
 
@@ -62,24 +62,24 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Upload Release Asset (Linux/macOS)
+      - name: Package ZIP (Linux/macOS)
         if: runner.os != 'Windows'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.binary_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
+        run: |
+          cd target/${{ matrix.target }}/release
+          zip -j "${{ matrix.archive_name }}" paths "${{ github.workspace }}/README.md"
 
-      - name: Upload Release Asset (Windows)
+      - name: Package ZIP (Windows)
         if: runner.os == 'Windows'
+        run: |
+          cd target/${{ matrix.target }}/release
+          powershell -Command "Compress-Archive -Path paths.exe, '${{ github.workspace }}\\README.md' -DestinationPath '${{ matrix.archive_name }}' -Force"
+
+      - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.binary_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
+          asset_path: ./target/${{ matrix.target }}/release/${{ matrix.archive_name }}
+          asset_name: ${{ matrix.archive_name }}
+          asset_content_type: application/zip
