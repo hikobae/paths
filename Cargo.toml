@@ -1,6 +1,6 @@
 [package]
 name = "paths"
-version = "0.3.0"
+version = "0.4.0"
 description = "A simple command-line utility to display PATH environment variable entries on separate lines."
 repository = "https://github.com/hikobae/paths"
 homepage = "https://github.com/hikobae/paths"
